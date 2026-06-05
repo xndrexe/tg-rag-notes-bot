@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Минимальные права. Содержит только чтение исходников — на pull_request от
+# форка GITHUB_TOKEN получает только read-only repository scope.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test on Python ${{ matrix.python-version }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # sentence-transformers тянет torch — это самая тяжёлая часть, при первом
+          # запуске уйдёт несколько минут на скачивание. На Windows ставится без
+          # CUDA по умолчанию (CPU-only torch wheel).
+          python -m pip install -e ".[dev]"
+
+      - name: Lint with ruff
+        run: ruff check src/ tests/
+
+      - name: Run tests
+        env:
+          # Подгружать модель эмбеддингов из HuggingFace в CI не хочется —
+          # тесты используют детерминированный FakeEmbedder, sentence-transformers
+          # импортируется, но не качает веса.
+          HF_HUB_OFFLINE: "1"
+          TRANSFORMERS_OFFLINE: "1"
+        run: pytest -q --cov=src/tg_rag_bot --cov-report=term
+
+  type-check:
+    name: Type check (mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip && pip install -e ".[dev]"
+      - run: mypy src/tg_rag_bot/answerer.py src/tg_rag_bot/extractors.py src/tg_rag_bot/store.py

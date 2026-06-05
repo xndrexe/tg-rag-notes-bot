@@ -1,14 +1,21 @@
 # tg-rag-notes-bot
 
+[![CI](https://github.com/xndrexe/tg-rag-notes-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/xndrexe/tg-rag-notes-bot/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Code style: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+
 Telegram-бот, который индексирует ваши PDF / DOCX / Markdown-документы и
 отвечает на вопросы по их содержимому через retrieval-augmented generation.
-Локальные эмбеддинги на CPU через sentence-transformers + persistent Chroma
-для поиска. Опциональный LLM-фолбэк на OpenAI-совместимое API для
-генеративного ответа.
+Локальные эмбеддинги на CPU через sentence-transformers + локальное
+векторное хранилище (SQLite + numpy, без C++-зависимостей) для поиска.
+Опциональный LLM-фолбэк на OpenAI-совместимое API для генеративного
+ответа — без ключа бот работает в extractive-режиме (цитаты).
 
 Минимальный жизнеспособный продукт: один процесс, одна команда `docker compose up`,
-никаких внешних сервисов кроме Telegram. Чистая архитектура, тесты,
-открытая лицензия.
+никаких внешних сервисов кроме Telegram. Чистая архитектура, 22 теста,
+структурированное логирование через structlog, graceful shutdown по
+SIGTERM, открытая лицензия.
 
 ## Что умеет
 
@@ -62,11 +69,26 @@ tg-rag-bot
 pytest -q
 ```
 
+22 теста, ~3 секунды на полный прогон, никаких сетевых вызовов.
 Покрывают:
 - Извлечение текста из всех поддерживаемых форматов
 - Чанкование (короткие/длинные/перекрытия)
 - Векторное хранилище (add / search / forget / изоляция между пользователями)
 - Extractive-ассемблер ответа
+- LLM-ассемблер через `httpx.MockTransport`: успех, 5xx-ошибка, network
+  error, malformed payload, пустые источники
+
+## Качество кода
+
+- **CI:** GitHub Actions matrix Linux/Windows × Python 3.11/3.12 +
+  отдельный mypy-проход (см. `.github/workflows/ci.yml`).
+- **Pre-commit:** хуки на ruff + базовые проверки в
+  `.pre-commit-config.yaml`. Активация: `pre-commit install`.
+- **Логирование:** structlog с двумя выводами — `LOG_FORMAT=console`
+  (dev) и `LOG_FORMAT=json` (prod, легко скрэпится в Loki/CloudWatch).
+- **Graceful shutdown:** SIGINT/SIGTERM прерывают polling через
+  `asyncio.Event`, бот аккуратно закрывает сессию HTTP-клиента и
+  завершается без зависших background-task'ов.
 
 ## Архитектура
 

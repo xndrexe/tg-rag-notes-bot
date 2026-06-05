@@ -1,10 +1,10 @@
 """Хендлеры Telegram-бота на aiogram 3."""
 from __future__ import annotations
 
-import logging
 import uuid
 from pathlib import Path
 
+import structlog
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.filters import Command, CommandStart
 from aiogram.types import Document, Message
@@ -14,7 +14,7 @@ from .config import Settings
 from .extractors import ExtractError, chunk_text, extract_text
 from .store import VectorStore
 
-LOG = logging.getLogger("tg_rag_bot")
+LOG = structlog.get_logger("tg_rag_bot")
 
 SUPPORTED_EXTENSIONS = (".pdf", ".docx", ".md", ".markdown", ".txt")
 
@@ -150,7 +150,7 @@ async def _handle_upload(
         doc_title=file_name,
         chunks=chunks,
     )
-    LOG.info("indexed", extra={"user_id": message.from_user.id, "doc_id": doc_id, "chunks": added})
+    LOG.info("indexed", user_id=message.from_user.id, doc_id=doc_id, chunks=added)
     await message.answer(
         f"Добавил {added} фрагментов из {file_name}. ID документа: <code>{doc_id}</code>",
         parse_mode="HTML",
