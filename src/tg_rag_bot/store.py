@@ -161,4 +161,4 @@ def _normalize(vec: np.ndarray) -> np.ndarray:
     norm = np.linalg.norm(vec)
     if norm < 1e-12:
         return vec
-    return vec / norm
+    return vec / float(norm)

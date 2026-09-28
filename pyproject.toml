@@ -59,6 +59,7 @@ ignore = [
 ]
 
 [tool.mypy]
-python_version = "3.11"
+# Версию Python mypy берёт у интерпретатора, которым запущен: свежая numpy
+# пишет заглушки синтаксисом 3.12, и жёсткое "3.11" роняет разбор на CI.
 strict = true
 ignore_missing_imports = true
