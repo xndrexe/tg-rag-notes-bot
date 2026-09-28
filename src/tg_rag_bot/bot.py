@@ -1,6 +1,7 @@
 """Хендлеры Telegram-бота на aiogram 3."""
 from __future__ import annotations
 
+import html
 import uuid
 from pathlib import Path
 
@@ -17,6 +18,20 @@ from .store import VectorStore
 LOG = structlog.get_logger("tg_rag_bot")
 
 SUPPORTED_EXTENSIONS = (".pdf", ".docx", ".md", ".markdown", ".txt")
+
+
+def indexed_message(added: int, file_name: str, doc_id: str) -> str:
+    """Ответ после индексации. Уходит с parse_mode=HTML, поэтому имя файла экранируется."""
+    if added % 10 == 1 and added % 100 != 11:
+        word = "фрагмент"
+    elif added % 10 in (2, 3, 4) and added % 100 not in (12, 13, 14):
+        word = "фрагмента"
+    else:
+        word = "фрагментов"
+    return (
+        f"Добавил {added} {word} из {html.escape(file_name)}. "
+        f"ID документа: <code>{doc_id}</code>"
+    )
 
 
 def build_dispatcher(settings: Settings, store: VectorStore) -> Dispatcher:
@@ -152,6 +167,6 @@ async def _handle_upload(
     )
     LOG.info("indexed", user_id=message.from_user.id, doc_id=doc_id, chunks=added)
     await message.answer(
-        f"Добавил {added} фрагментов из {file_name}. ID документа: <code>{doc_id}</code>",
+        indexed_message(added, file_name, doc_id),
         parse_mode="HTML",
     )
