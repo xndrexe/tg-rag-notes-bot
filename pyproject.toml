@@ -9,7 +9,7 @@ description = "Telegram-бот, который индексирует PDF/DOCX/M
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-authors = [{ name = "Aleksandr Kostiukhov", email = "skostuhov@gmail.com" }]
+authors = [{ name = "Aleksandr Kostiukhov", email = "102666804+xndrexe@users.noreply.github.com" }]
 keywords = ["telegram", "bot", "rag", "llm", "embeddings", "aiogram"]
 
 dependencies = [
