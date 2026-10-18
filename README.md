@@ -5,6 +5,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Code style: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
+**Что это и кому.** Telegram-бот для тех, кто держит инструкции, регламенты и
+заметки в файлах: загружаете PDF, DOCX или Markdown и спрашиваете обычными
+словами, бот отвечает цитатами из ваших документов. Поиск по смыслу идёт на
+локальных эмбеддингах, документы каждого пользователя хранятся отдельно.
+
 Telegram-бот, который индексирует ваши PDF / DOCX / Markdown-документы и
 отвечает на вопросы по их содержимому через retrieval-augmented generation.
 Локальные эмбеддинги на CPU через sentence-transformers + локальное
@@ -21,7 +26,7 @@ SIGTERM, открытая лицензия.
 
 - Принимает PDF, DOCX, Markdown, txt
 - Извлекает текст и режет на перекрывающиеся чанки
-- Сохраняет векторы в локальную Chroma (per-user collection)
+- Сохраняет векторы в локальное хранилище на SQLite + numpy, у каждого пользователя свои документы
 - Отвечает на текстовые вопросы релевантными цитатами (extractive) или
   через LLM (с `OPENAI_API_KEY`)
 - `/list` — посмотреть загруженные документы
